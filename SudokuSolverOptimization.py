@@ -51,8 +51,8 @@ def sudokuSolver(sudoku):
 
 
 
-def getANewSudoku():
-    apiURL = "https://sugoku.onrender.com/board?difficulty=hard"
+def getANewSudoku(diffLevel):
+    apiURL = f"https://sugoku.onrender.com/board?difficulty={diffLevel}"
     response = requests.get(apiURL)
     sudoku_board = response.json()['board']
     return sudoku_board
@@ -69,4 +69,4 @@ def start():
     else:
         print("No solution exists.")
 
-start()
+#start()
