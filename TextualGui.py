@@ -1,5 +1,8 @@
+import time
+
 from nicegui import ui
 import SudokuSolverOptimization
+import asyncio
 
 with ui.column():
      ui.label('Sudoku solver with GUI').classes(' justify-center text-2xl font-bold text-center mt-4 ')
@@ -32,12 +35,19 @@ def resetBoard():
     boardGrid.refresh()
     statusMsg.set_text("Click Generate to begin.")
 
+def updateCell(row: int, col: int, value: int):
+    global board
+    board[row][col] = value
+    boardGrid.refresh()
+
 @ui.refreshable
 def boardGrid():
+
     with ui.grid(columns=9*'40px ').classes('w-full gap-0'):
         for row in board:
             for col in row:
                 ui.label(col).classes('border p-1')
+
 
 def generate():
     global board
@@ -53,13 +63,13 @@ def generate():
 
 boardGrid()
 
-def solveSudoku():
+async def solveSudoku():
     global board
     global boardReset
     global boardSolved
     if boardReset == False and boardSolved == False:
 
-        if SudokuSolverOptimization.sudokuSolver(board):
+        if await  SudokuSolverOptimization.sudokuSolver(board, updateCell):
             statusMsg.set_text("Sudoku Solved")
             boardGrid.refresh()
             boardSolved = True
@@ -67,11 +77,13 @@ def solveSudoku():
             statusMsg.set_text("No solution exists.")
     else:
         statusMsg.set_text("Reset the board first")
-        
+
+async def asyncSolver():
+    await solveSudoku()
 
 with ui.row():
     ui.button('Reset', on_click=lambda: resetBoard())
-    ui.button('Solve', on_click=lambda: solveSudoku())
+    ui.button('Solve', on_click=lambda: asyncio.create_task(asyncSolver()))
 
 statusMsg = ui.label("Ready")
 

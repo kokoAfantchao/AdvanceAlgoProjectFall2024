@@ -1,5 +1,8 @@
+import asyncio
 import tkinter
 import requests
+import time
+
 
 def checkValidity(num, row, col, sudoku):
     # For row and column
@@ -30,7 +33,7 @@ def printBoard(sudoku):
             row += str(num) + " "
         print(row)
 
-def sudokuSolver(sudoku):
+async def sudokuSolver(sudoku, callback = None):
     
     emptyCell = nextEmptyCell(sudoku)
     if not emptyCell:
@@ -38,17 +41,24 @@ def sudokuSolver(sudoku):
 
     row, col = emptyCell
 
-    for num in range(1, 10):  
-        if checkValidity(num, row, col, sudoku):
-            sudoku[row][col] = num  
+    for num in range(1, 10):
 
-            if sudokuSolver(sudoku): 
+        if checkValidity(num, row, col, sudoku):
+            sudoku[row][col] = num
+            if callback:
+                await asyncio.sleep(0.5)
+                callback(row, col, num)
+
+
+            if await sudokuSolver(sudoku, callback):
                 return True
 
             sudoku[row][col] = 0  # change wrong placement to 0
+            if callback:
+                await asyncio.sleep(0.5)
+                callback(row, col, 0)
 
     return False  # backtrack
-
 
 
 def getANewSudoku(diffLevel):
