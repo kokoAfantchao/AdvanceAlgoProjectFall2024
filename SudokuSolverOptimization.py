@@ -24,13 +24,6 @@ def nextEmptyCell(sudoku):
                 return (i, j)
     return None
 
-# def printBoard(sudoku):
-#     for rows in sudoku:
-#         row = ""
-#         for number in rows:
-#             row += str(number) + " "
-#         print(row)
-
 
 def getPossibleValues(board):
     # Making possibleValues array for every cell
