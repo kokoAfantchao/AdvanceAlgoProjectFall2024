@@ -4,6 +4,9 @@ import requests
 import sys
 import asyncio
 
+from anyio.abc import value
+
+
 def checkValidity(number, row, col, sudoku):
     # Validity for Row and column
     for i in range(9):
@@ -196,7 +199,7 @@ def applyHiddenTripletsFor(board, index, group, possibleValues):
             possibleValues[cell] = {num1,num2,num3}
 
 
-def sudokuSolver(sudoku, callback = None):
+async def sudokuSolver(sudoku, callback = None,eventCallback=None, timeCallback=None):
     
     possibleValues = getPossibleValues(sudoku)  # Get possibleValues array for all cells
     applySingleton(sudoku,possibleValues) #apply singleton
@@ -204,9 +207,12 @@ def sudokuSolver(sudoku, callback = None):
     applyHiddenTriplets(sudoku, possibleValues)  # Apply hiddenTriplets
     print("possibleValues: ",possibleValues)
     with open("output.txt", "w") as file:
-        return solverHelper(sudoku,possibleValues,file, callback)
+        value =  await solverHelper(sudoku,possibleValues,file, callback)
+        timeCallback("optimal")
+        eventCallback.set()
+        return value
 
-async  def solverHelper(sudoku,possibleValues,file , callback = None):
+async  def solverHelper(sudoku,possibleValues,file , callback = None, eventCallback=None):
     emptyCell = nextEmptyCell(sudoku)
     if not emptyCell:
         return True  # Sudoku has been solved
@@ -254,6 +260,11 @@ def pretty_print_sudoku(board,file):
 
         print("",file=file)
 
+async def resolverUnoptimized(sudoku, callback = None, eventCallback=None, timeCallback=None):
+   result =  await sudokuSolverUnoptimized(sudoku, callback)
+   eventCallback.set()
+   timeCallback("basic")
+   return  result
 
 async  def sudokuSolverUnoptimized(sudoku, callback = None):
     emptyCell = nextEmptyCell(sudoku)
