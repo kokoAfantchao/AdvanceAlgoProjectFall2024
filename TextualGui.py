@@ -1,6 +1,10 @@
 from operator import is_not
 
+from jinja2.optimizer import optimize
 from nicegui import ui
+from typing_extensions import get_origin
+from uvicorn.protocols.utils import get_local_addr
+
 import SudokuSolverOptimization
 import asyncio
 import  copy
@@ -10,6 +14,10 @@ with ui.column():
 diffs = ["Easy", "Medium", "Hard"]
 difficulty = 0
 elapsed = 0
+# basicTask = None
+# optimizeTask = None
+timerTask = None
+timeEvent = asyncio.Event()
 def setDiff(newDiff):
      difficulty = newDiff
      difficultySelector.set_text(diffs[difficulty])
@@ -43,14 +51,23 @@ def resetBoard():
     global  boardOptimized
     global boardReset
     global elapsed
-    global timer_label 
+    global timer_label
+    global timeEvent
+    global timerTask
     board = [([0]*9) for i in range(9)]
     boardOptimized = [([0]*9) for i in range(9)]
     elapsed = 0
+    timeEvent.set()
+    timeEvent.clear()
+
     timer_label.set_text(f"Time: {elapsed} seconds")
-    uptiFinaltime.set_text(f"Time: {elapsed} seconds")
-    finaltime.set_text(f"Time: {elapsed} seconds")
-    
+    uptiFinaltime.set_text(f"Optimized Algo Time: {elapsed} seconds")
+    finaltime.set_text(f"Basic Algo Time: {elapsed} seconds")
+
+    if  basicTask and not basicTask.done():
+        basicTask.cancel()
+    if  optimizeTask and not optimizeTask.done() :
+        optimizeTask.cancel()
     boardReset = True
     boardGrid.refresh()
     statusMsg.set_text("Click Generate to begin.")
@@ -60,7 +77,7 @@ async def counting_up_timer(timeEvent):
     while not timeEvent.is_set():
        # / timer_label.set_text(f"Time: {elapsed} seconds")
         await asyncio.sleep(0.01)
-        elapsed += 1/100
+        elapsed = round(elapsed + 1/100.00, 2)
 
 @ui.refreshable
 def boardGrid():
@@ -87,18 +104,20 @@ def boardGrid():
 with ui.column():
     finaltime = ui.label('Basic Algo Time: ').classes('justify-center text-2xl font-bold text-center mt-4')
 with ui.column():
-    uptiFinaltime = ui.label('Optimized Time:  ').classes('justify-center text-2xl font-bold text-center mt-4')
+    uptiFinaltime = ui.label('Optimized Algo Time:  ').classes('justify-center text-2xl font-bold text-center mt-4')
 
 def generate():
     global board
     global boardOptimized
     global boardReset
     global boardSolved
+    global  elapsed
     statusMsg.set_text(f"Generating {diffs[difficulty].lower()} board...")
     board = SudokuSolverOptimization.getANewSudoku(diffs[difficulty].lower())
     boardOptimized = copy.deepcopy(board)
     boardReset = False
     boardSolved = False
+    elapsed = 0
     print(board)
     boardGrid.refresh()
     statusMsg.set_text("Click Solve")
@@ -116,15 +135,19 @@ async def  solveSudoku():
     global boardOptimized
     global boardReset
     global boardSolved
+    global basicTask
+    global optimizeTask
+    global timeEvent
+    global timerTaks
     if boardReset == False and boardSolved == False:
         event = asyncio.Event()
         event_2 = asyncio.Event()
-        timeEvent = asyncio.Event()
-        asyncio.create_task(counting_up_timer(timeEvent))
-        asyncio.create_task(SudokuSolverOptimization.sudokuSolver(boardOptimized, updateFastCell, event, finaltimeUpdate))
-        asyncio.create_task(SudokuSolverOptimization.resolverUnoptimized(board, updateCell, event_2, finaltimeUpdate))
+        timerTaks = asyncio.create_task(counting_up_timer(timeEvent))
+        optimizeTask  = asyncio.create_task(SudokuSolverOptimization.sudokuSolver(boardOptimized, updateFastCell, event, finaltimeUpdate))
+        basicTask = asyncio.create_task(SudokuSolverOptimization.resolverUnoptimized(board, updateCell, event_2, finaltimeUpdate))
         if ( await event.wait() and await event_2.wait()):
              timeEvent.set()
+             timerTaks.cancel()
              statusMsg.set_text("Sudoku Solved")
              boardGrid.refresh()
              boardSolved = True
