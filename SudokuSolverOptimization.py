@@ -224,13 +224,13 @@ async  def solverHelper(sudoku,possibleValues,file , callback = None, eventCallb
             sudoku[row][col] = number
             if callback:
                 callback(row, col, number)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.05)
             # pretty_print_sudoku(sudoku,file)
             if await solverHelper(sudoku,possibleValues,file, callback):
                 return True
             if callback:
                 callback(row, col, 0)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.05)
             sudoku[row][col] = 0
 
     return False  
@@ -278,7 +278,7 @@ async  def sudokuSolverUnoptimized(sudoku, callback = None):
         if checkValidity(num, row, col, sudoku):
             sudoku[row][col] = num
             if callback:
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.05)
                 callback(row, col, num)
 
             if await sudokuSolverUnoptimized(sudoku, callback):
@@ -286,7 +286,7 @@ async  def sudokuSolverUnoptimized(sudoku, callback = None):
 
             sudoku[row][col] = 0  # change wrong placement to 0
             if callback:
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.05)
                 callback(row, col, 0)
 
     return False

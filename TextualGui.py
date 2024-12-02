@@ -43,9 +43,14 @@ def resetBoard():
     global  boardOptimized
     global boardReset
     global elapsed
+    global timer_label 
     board = [([0]*9) for i in range(9)]
     boardOptimized = [([0]*9) for i in range(9)]
     elapsed = 0
+    timer_label.set_text(f"Time: {elapsed} seconds")
+    uptiFinaltime.set_text(f"Time: {elapsed} seconds")
+    finaltime.set_text(f"Time: {elapsed} seconds")
+    
     boardReset = True
     boardGrid.refresh()
     statusMsg.set_text("Click Generate to begin.")
@@ -54,8 +59,8 @@ async def counting_up_timer(timeEvent):
     global elapsed
     while not timeEvent.is_set():
        # / timer_label.set_text(f"Time: {elapsed} seconds")
-        await asyncio.sleep(1)
-        elapsed += 1
+        await asyncio.sleep(0.01)
+        elapsed += 1/100
 
 @ui.refreshable
 def boardGrid():
