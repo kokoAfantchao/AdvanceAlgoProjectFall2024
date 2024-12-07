@@ -18,6 +18,7 @@ elapsed = 0
 # optimizeTask = None
 timerTask = None
 timeEvent = asyncio.Event()
+
 def setDiff(newDiff):
      difficulty = newDiff
      difficultySelector.set_text(diffs[difficulty])
@@ -114,6 +115,10 @@ def generate():
     global  elapsed
     statusMsg.set_text(f"Generating {diffs[difficulty].lower()} board...")
     board = SudokuSolverOptimization.getANewSudoku(diffs[difficulty].lower())
+    if board is None:
+        statusMsg.set_text("Failed to generate board ")
+        ui.notify("Failed to generate board, Please retry again",position="top", duration=1, type="negative",multi_line=True)
+        return
     boardOptimized = copy.deepcopy(board)
     boardReset = False
     boardSolved = False
